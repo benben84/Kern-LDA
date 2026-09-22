@@ -32,6 +32,13 @@ document.body.addEventListener("input", (event) => {
   onField(event);
 });
 
+window.addEventListener("resize", () => {
+  const currentStep = document.querySelector(".step-link.is-current");
+  if (currentStep && sidebar.scrollWidth > sidebar.clientWidth + 8) {
+    currentStep.scrollIntoView({ inline: "center", block: "nearest" });
+  }
+});
+
 render({ focusHeading: false });
 
 function onClick(event) {
@@ -200,6 +207,10 @@ function render({ focusHeading = false, restoreFocusId = "" } = {}) {
   }[state.step];
 
   main.innerHTML = `<article class="panel">${errorBox()}${renderer()}${navRow()}</article>`;
+  const currentStep = document.querySelector(".step-link.is-current");
+  if (currentStep && sidebar.scrollWidth > sidebar.clientWidth + 8) {
+    currentStep.scrollIntoView({ inline: "center", block: "nearest" });
+  }
   if (restoreFocusId) document.getElementById(restoreFocusId)?.focus();
   else if (focusHeading) main.querySelector("h1")?.focus();
 }
