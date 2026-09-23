@@ -3,29 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kern LDA — Divorce preparation wizard</title>
-  <meta name="description" content="A Kern County self-help wizard that organizes a divorce, legal separation, or nullity and maps your answers onto official California court forms.">
+  <title>Kern LDA toolbox</title>
+  <meta name="description" content="Kern County legal document assistant toolbox for divorce intake and preparing Judicial Council forms.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230e5c56'/%3E%3Cpath d='M8 22V10h2.4l5.6 8.2L21.6 10H24v12h-2.2v-7.6L17.2 22h-2.4l-4.6-7.6V22H8z' fill='%23f4efe4'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <a class="skip" href="#main">Skip to the current step</a>
+  <a class="skip" href="#toolbox">Skip to the matter list</a>
   <header class="masthead">
     <div class="masthead-inner">
-      <p class="brand">Kern LDA</p>
+      <a class="brand" href="#/">Kern LDA</a>
       <div>
-        <p class="brand-title">Divorce preparation wizard</p>
-        <p class="brand-note">Kern County, California · Official forms stay on the court websites</p>
+        <p class="brand-title" id="brand-title">LDA toolbox</p>
+        <p class="brand-note" id="brand-note">Kern County matters, intake, and prepared forms</p>
       </div>
+      <a class="header-link" id="header-matter" hidden href="#/">Matter file</a>
     </div>
   </header>
-  <div class="layout">
+  <div id="toolbox"></div>
+  <div class="layout" id="wizard-layout" hidden>
     <nav class="sidebar" id="sidebar" aria-label="Wizard steps"></nav>
     <main id="main" tabindex="-1"></main>
   </div>
   <noscript>
-    <p class="noscript">This wizard needs JavaScript. It runs entirely in your browser and does not send your answers to a server.</p>
+    <p class="noscript">This toolbox needs JavaScript. Matters stay in this browser and are not uploaded.</p>
   </noscript>
-  <script type="module" src="js/wizard.js"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>

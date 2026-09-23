@@ -1,8 +1,12 @@
 # Kern LDA
 
-A self-help wizard for people preparing a divorce, legal separation, or nullity in Kern County, California.
+A local toolbox for a Kern County legal document assistant. Each matter keeps an office file, a divorce intake, and filled starting forms.
 
-It asks the questions that decide which case type fits, then builds a filing plan and a worksheet mapped to current Judicial Council forms (FL-100, FL-110, FL-700, FL-800, and the related attachments). It does not give legal advice, calculate support, or create a PDF the court clerk will accept. Copy the worksheet onto the official forms from [California Courts](https://selfhelp.courts.ca.gov/divorce) and confirm fees, hours, and the correct branch on [kern.courts.ca.gov](https://www.kern.courts.ca.gov/).
+The divorce wizard is the intake. When the matter is a one-person Kern case, Prepare forms writes those answers into the official fillable FL-100, FL-110, and, when there are minor children, FL-105. The PDFs in `forms/` are the Judicial Council originals (FL-100 rev. January 1, 2020, and the matching FL-110 and FL-105), re-saved so a browser can fill the form fields. Signature lines, the case number, and the FL-105 five-year residence history are left blank on purpose.
+
+Joint petitions (FL-700) and summary dissolutions (FL-800) still get a worksheet. Those forms are not in the autofill set yet.
+
+This prepares documents from the client’s answers. It does not give legal advice. Review every PDF before the client signs it.
 
 Answers stay in the browser. Nothing is uploaded.
 
@@ -20,4 +24,4 @@ Open `http://localhost:8765`.
 npm test
 ```
 
-The tests cover the path rules: summary dissolution limits, residency, Kern venue by ZIP, joint petition versus a one-person petition, and the form list for a case with children.
+The tests cover the path rules, the matter file, and writing a sample intake into the real FL-100, FL-110, and FL-105 fields.
