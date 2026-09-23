@@ -1,6 +1,7 @@
 import { blankAnswers } from "./engine.js";
 
-export const MATTERS_KEY = "kern-lda-matters-v1";
+export const MATTERS_KEY = "rightform-matters-v1";
+export const PREVIOUS_MATTERS_KEY = "kern-lda-matters-v1";
 export const LEGACY_WIZARD_KEY = "kern-lda-divorce-wizard-v1";
 
 export function blankWizard() {
@@ -30,13 +31,17 @@ export function createMatter(overrides = {}, now = new Date()) {
 }
 
 export function loadMatterFile(storage) {
-  const parsed = readJson(storage, MATTERS_KEY);
-  let matters = Array.isArray(parsed) ? parsed.map(normalizeMatter) : [];
-  if (!matters.length) {
+  const current = readJson(storage, MATTERS_KEY);
+  const previous = readJson(storage, PREVIOUS_MATTERS_KEY);
+  let matters = Array.isArray(current)
+    ? current.map(normalizeMatter)
+    : (Array.isArray(previous) ? previous.map(normalizeMatter) : []);
+  let shouldWrite = !Array.isArray(current) && Array.isArray(previous);
+  if (!Array.isArray(current) && !Array.isArray(previous)) {
     const legacy = readJson(storage, LEGACY_WIZARD_KEY);
     if (legacy && legacy.answers) {
-      const matter = createMatter({
-        fileNumber: "KLD-LEGACY",
+      matters = [normalizeMatter(createMatter({
+        fileNumber: "RF-LEGACY",
         wizard: {
           step: legacy.step || "welcome",
           answers: legacy.answers,
@@ -44,11 +49,11 @@ export function loadMatterFile(storage) {
           visited: legacy.visited || { welcome: true },
           example: Boolean(legacy.example),
         },
-      });
-      matters = [normalizeMatter(matter)];
-      writeMatters(storage, matters);
+      }))];
+      shouldWrite = true;
     }
   }
+  if (shouldWrite) writeMatters(storage, matters);
   return matters.sort((a, b) => String(b.openedOn).localeCompare(String(a.openedOn)) || String(b.fileNumber).localeCompare(String(a.fileNumber)));
 }
 
@@ -70,7 +75,7 @@ export function removeMatter(storage, id) {
 
 export function nextFileNumber(matters, now = new Date()) {
   const year = now.getFullYear();
-  const prefix = `KLD-${year}-`;
+  const prefix = `RF-${year}-`;
   const used = matters
     .map((matter) => matter.fileNumber || "")
     .filter((value) => value.startsWith(prefix))

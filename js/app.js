@@ -34,7 +34,7 @@ openDesktopStore().then((opened) => {
 }).catch((error) => {
   toolbox.hidden = false;
   wizardLayout.hidden = true;
-  toolbox.innerHTML = `<section class="panel"><h1>The matter folder could not be opened</h1><p>${esc(error.message || "Kern LDA could not read the files on this computer.")}</p></section>`;
+  toolbox.innerHTML = `<section class="panel"><h1>The matter folder could not be opened</h1><p>${esc(error.message || "Rightform could not read the files on this computer.")}</p></section>`;
 });
 
 function renderDesktopRequired() {
@@ -42,12 +42,12 @@ function renderDesktopRequired() {
   toolbox.hidden = false;
   headerMatter.hidden = true;
   brandTitle.textContent = "LDA toolbox";
-  brandNote.textContent = "On this computer";
+  brandNote.textContent = "Proprietary software";
   toolbox.innerHTML = `<section class="panel">
-    <p class="eyebrow">Kern LDA</p>
-    <h1>This toolbox runs on your computer</h1>
-    <p class="lede">Start the Kern LDA app from the project folder. It does not run as a website, and it does not keep matters in a browser.</p>
-    <div class="callout"><p>Run <code>npm install</code> once, then <code>npm start</code>. Each matter and its filled forms are written to the Kern-LDA folder in your documents.</p></div>
+    <p class="eyebrow">Rightform</p>
+    <h1>Rightform runs on this computer</h1>
+    <p class="lede">Start Rightform from the project folder. This is proprietary software for Rightform.</p>
+    <div class="callout"><p>Run <code>npm install</code> once, then <code>npm start</code>. Each matter and its filled forms are written to the Rightform folder in your documents.</p></div>
   </section>`;
 }
 
@@ -60,7 +60,7 @@ function renderRoute() {
   if (route.name === "home") {
     activeMatterId = "";
     brandTitle.textContent = "LDA toolbox";
-    brandNote.textContent = "On this computer · matters and prepared forms";
+    brandNote.textContent = "Proprietary software · Kern County intake";
     headerMatter.removeAttribute("href");
     renderHome();
     return;
@@ -100,13 +100,13 @@ function renderRoute() {
 function renderHome() {
   const matters = loadMatterFile(store);
   toolbox.innerHTML = `<section class="panel">
-    <p class="eyebrow">Kern LDA</p>
+    <p class="eyebrow">Rightform</p>
     <h1>Matters</h1>
     <p class="lede">Open a divorce file, take the intake in the wizard, then prepare the starting Judicial Council forms from those answers.</p>
     <p><button class="button" type="button" data-action="new-matter">New divorce matter</button></p>
-    ${matters.length ? `<div class="matter-list">${matters.map(matterCard).join("")}</div>` : `<div class="callout"><p>No matters yet. A new file keeps the client’s answers in the Kern-LDA folder on this computer and uses them to fill FL-100, FL-110, and FL-105.</p></div>`}
+    ${matters.length ? `<div class="matter-list">${matters.map(matterCard).join("")}</div>` : `<div class="callout"><p>No matters yet. A new file keeps the client’s answers in the Rightform folder on this computer and uses them to fill FL-100, FL-110, and FL-105.</p></div>`}
     <p class="help">Saved on this computer in ${esc(store.dataDir)}.</p>
-    <p class="help">This toolbox prepares documents from what the client tells you. It is not a law practice and it does not give legal advice. Review every form before the client signs it.</p>
+    <p class="help">Rightform software prepares documents from what the client tells you. It does not give legal advice. Review every form before the client signs it.</p>
   </section>`;
 }
 

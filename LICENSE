@@ -1,0 +1,6 @@
+Copyright (c) 2026 Rightform. All rights reserved.
+
+This software is proprietary to Rightform. It is licensed only for use by Rightform.
+No one else may copy, modify, distribute, sublicense, or use this software without prior written permission from Rightform.
+
+The Judicial Council form templates in forms/ are official California court forms. They are not Rightform's copyright. pdf-lib is included under the Apache License 2.0. Electron and other third-party packages keep the licenses stated in their own packages.

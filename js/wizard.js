@@ -278,11 +278,11 @@ function renderWelcome() {
     <h1 tabindex="-1">Prepare the paperwork. The court still decides the case.</h1>
     <p class="lede">This wizard sorts a Kern County divorce, legal separation, or nullity into a paperwork plan and a worksheet you can copy onto current Judicial Council forms.</p>
     <div class="callout">
-      <p>It is not a lawyer, not a Legal Document Assistant, and not the court. It does not give legal advice, calculate support, or create a form the clerk will accept. File the official PDFs from the California Courts website.</p>
+      <p>Rightform software prepares paperwork from the answers you enter. It does not give legal advice, calculate support, or replace the official Judicial Council form. Review every PDF before the client signs it.</p>
     </div>
     <ul>
-      <li>Your answers stay in the Kern-LDA folder on this computer. Nothing is uploaded.</li>
-      <li>Keep that folder private. This toolbox does not run as a website.</li>
+      <li>Your answers stay in the Rightform folder on this computer. Nothing is uploaded.</li>
+      <li>Keep that folder private. Rightform is proprietary software and runs on this computer.</li>
       <li>Many official forms are also published in Spanish. Use the language links on each form page.</li>
     </ul>
     <label class="checkline">

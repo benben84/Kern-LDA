@@ -1,5 +1,5 @@
 import { app, BrowserWindow, Menu, ipcMain, shell } from "electron";
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { TEMPLATES, isAllowedReference, matterFolderName, resolveInside, safeFileName } from "../js/paths.js";
@@ -10,8 +10,17 @@ const stateName = "matters.json";
 let dataDir = "";
 
 function desktopDataDir() {
-  if (process.env.KERN_LDA_DIR) return path.resolve(process.env.KERN_LDA_DIR);
-  return path.join(app.getPath("documents"), "Kern-LDA");
+  if (process.env.RIGHTFORM_DIR) return path.resolve(process.env.RIGHTFORM_DIR);
+  return path.join(app.getPath("documents"), "Rightform");
+}
+
+function importPreviousMatters() {
+  const dest = resolveInside(dataDir, stateName);
+  if (existsSync(dest) || process.env.RIGHTFORM_DIR) return;
+  const previous = path.join(app.getPath("documents"), "Kern-LDA", stateName);
+  if (!existsSync(previous)) return;
+  mkdirSync(dataDir, { recursive: true });
+  copyFileSync(previous, dest);
 }
 
 function readState() {
@@ -42,7 +51,7 @@ function createWindow() {
     height: 860,
     minWidth: 800,
     minHeight: 640,
-    title: "Kern LDA",
+    title: "Rightform",
     backgroundColor: "#f3efe6",
     autoHideMenuBar: true,
     webPreferences: {
@@ -85,6 +94,7 @@ if (!app.requestSingleInstanceLock()) {
   app.whenReady().then(() => {
   dataDir = desktopDataDir();
   mkdirSync(dataDir, { recursive: true });
+  importPreviousMatters();
   Menu.setApplicationMenu(null);
 
   ipcMain.handle("app:data-dir", () => dataDir);

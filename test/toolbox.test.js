@@ -31,7 +31,8 @@ test("a legacy wizard save becomes the first matter", () => {
   });
   const matters = loadMatterFile(storage);
   assert.equal(matters.length, 1);
-  assert.equal(matters[0].fileNumber, "KLD-LEGACY");
+  assert.equal(matters[0].fileNumber, "RF-LEGACY");
+  assert.match(storage.getItem("rightform-matters-v1"), /RF-LEGACY/);
   assert.equal(matters[0].wizard.step, "dates");
   assert.equal(matters[0].wizard.answers.people.you.name, "Alex Rivera");
   assert.equal(loadMatterFile(storage).length, 1);
@@ -45,9 +46,24 @@ test("file numbers increase inside the year and the matter list uses both names"
   second.wizard.answers.people.you.name = "Alex Rivera";
   second.wizard.answers.people.other.name = "Jordan Rivera";
   upsertMatter(storage, second);
-  assert.equal(first.fileNumber, "KLD-2026-001");
-  assert.equal(second.fileNumber, "KLD-2026-002");
+  assert.equal(first.fileNumber, "RF-2026-001");
+  assert.equal(second.fileNumber, "RF-2026-002");
   assert.equal(matterTitle(second), "Alex Rivera and Jordan Rivera");
+});
+
+test("an earlier matter file is kept and new files use Rightform numbers", () => {
+  const storage = memoryStorage({
+    "kern-lda-matters-v1": JSON.stringify([{
+      id: "old",
+      openedOn: "2026-09-01",
+      fileNumber: "KLD-2026-004",
+      wizard: { step: "welcome", answers: exampleSummary(), checks: {}, visited: { welcome: true } },
+    }]),
+  });
+  const matters = loadMatterFile(storage);
+  assert.equal(matters[0].fileNumber, "KLD-2026-004");
+  assert.match(storage.getItem("rightform-matters-v1"), /KLD-2026-004/);
+  assert.equal(nextFileNumber(matters), "RF-2026-001");
 });
 
 test("a one-person Kern divorce with a child fills FL-100, FL-110, and FL-105", () => {

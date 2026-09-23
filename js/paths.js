@@ -46,7 +46,7 @@ export function resolveInside(root, ...parts) {
   const resolvedRoot = path.resolve(root);
   const resolved = path.resolve(resolvedRoot, ...parts);
   if (resolved !== resolvedRoot && !resolved.startsWith(resolvedRoot + path.sep)) {
-    throw new Error("That path is outside the Kern LDA folder on this computer.");
+    throw new Error("That path is outside the Rightform folder on this computer.");
   }
   return resolved;
 }
