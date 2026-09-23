@@ -301,6 +301,13 @@ a { color: var(--teal-dark); }
 .worksheet dd { margin: 0; }
 .link-list { columns: 2; padding-left: 1.1rem; }
 .noscript { max-width: 40rem; margin: 1rem auto; padding: 1rem; background: white; }
+.legal-foot {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0.4rem 1.25rem 1.2rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
 @media (max-width: 860px) {
   .layout { grid-template-columns: 1fr; padding: 0.8rem; }
   .sidebar {
@@ -320,7 +327,7 @@ a { color: var(--teal-dark); }
 }
 @media print {
   body { background: white; }
-  .masthead, .sidebar, .nav-row, .skip, .no-print { display: none !important; }
+  .masthead, .sidebar, .nav-row, .skip, .no-print, .legal-foot { display: none !important; }
   .layout { display: block; max-width: none; padding: 0; }
   .panel { border: 0; box-shadow: none; padding: 0; }
   a { text-decoration: none; color: inherit; }

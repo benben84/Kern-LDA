@@ -8,6 +8,7 @@ import { PDFDocument } from "../vendor/pdf-lib.min.js";
 import { buildPdf } from "../js/documents.js";
 import { createMemoryStorage } from "../js/desktop-store.js";
 import { exampleWithChild } from "../js/engine.js";
+import { MATTERS_KEY } from "../js/matters.js";
 import { planDocuments } from "../js/populate.js";
 import {
   isAllowedReference,
@@ -17,18 +18,18 @@ import {
   TEMPLATES,
 } from "../js/paths.js";
 
-test("matter folders and saved files stay inside the Kern LDA directory", () => {
-  const root = mkdtempSync(path.join(os.tmpdir(), "kern-lda-"));
+test("matter folders and saved files stay inside the Rightform directory", () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "rightform-"));
   try {
     assert.equal(matterFolderName("../../etc"), "etc");
-    assert.equal(matterFolderName("KLD-2026-001"), "KLD-2026-001");
+    assert.equal(matterFolderName("RF-2026-001"), "RF-2026-001");
     assert.equal(safeFileName("FL-100-alex-rivera.pdf"), "FL-100-alex-rivera.pdf");
     assert.throws(() => safeFileName("../secrets.pdf"));
-    assert.equal(resolveInside(root, matterFolderName("KLD-2026-001")), path.join(root, "KLD-2026-001"));
+    assert.equal(resolveInside(root, matterFolderName("RF-2026-001")), path.join(root, "RF-2026-001"));
     assert.throws(() => resolveInside(root, ".."));
-    const folder = resolveInside(root, matterFolderName("KLD-2026-001"));
+    const folder = resolveInside(root, matterFolderName("RF-2026-001"));
     const dest = resolveInside(folder, safeFileName("FL-100-alex-rivera.pdf"));
-    assert.equal(dest, path.join(root, "KLD-2026-001", "FL-100-alex-rivera.pdf"));
+    assert.equal(dest, path.join(root, "RF-2026-001", "FL-100-alex-rivera.pdf"));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -45,13 +46,13 @@ test("only the bundled form templates and known court references are allowed", (
 
 test("the desktop matter file is a local JSON snapshot", () => {
   const storage = createMemoryStorage();
-  storage.setItem("kern-lda-matters-v1", "[]");
-  const root = mkdtempSync(path.join(os.tmpdir(), "kern-lda-"));
+  storage.setItem(MATTERS_KEY, "[]");
+  const root = mkdtempSync(path.join(os.tmpdir(), "rightform-"));
   try {
     const dest = path.join(root, "matters.json");
     writeFileSync(dest, JSON.stringify(storage.dump()));
     const loaded = createMemoryStorage(JSON.parse(readFileSync(dest, "utf8")));
-    assert.equal(loaded.getItem("kern-lda-matters-v1"), "[]");
+    assert.equal(loaded.getItem(MATTERS_KEY), "[]");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

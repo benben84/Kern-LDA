@@ -1,6 +1,9 @@
 {
-  "name": "kern-lda",
+  "name": "rightform",
   "private": true,
+  "license": "UNLICENSED",
+  "description": "Proprietary Rightform software for Kern County intake and document preparation.",
+  "author": "Rightform",
   "type": "module",
   "main": "desktop/main.js",
   "scripts": {
