@@ -8,15 +8,40 @@ import {
   validateStep,
   visibleSteps,
 } from "./engine.js";
+import { blankWizard } from "./matters.js";
 
-const STORAGE_KEY = "kern-lda-divorce-wizard-v1";
-const sidebar = document.querySelector("#sidebar");
-const main = document.querySelector("#main");
+let sidebar;
+let main;
+let state = blankWizard();
+let persist = () => {};
+let openMatter = () => {};
+let openDocuments = () => {};
 
-let state = loadState();
+export function mountWizard({ load, save, onMatter, onDocuments }) {
+  sidebar = document.querySelector("#sidebar");
+  main = document.querySelector("#main");
+  persist = save;
+  openMatter = onMatter;
+  openDocuments = onDocuments;
+  const loaded = load() || blankWizard();
+  loaded.answers = mergeAnswers(blankAnswers(), loaded.answers || blankAnswers());
+  state = loaded;
+  state.errors = [];
+  document.body.addEventListener("click", onClick);
+  document.body.addEventListener("change", onChange);
+  document.body.addEventListener("input", onInput);
+  window.addEventListener("resize", onResize);
+  render({ focusHeading: false });
+}
 
-document.body.addEventListener("click", onClick);
-document.body.addEventListener("change", (event) => {
+export function unmountWizard() {
+  document.body.removeEventListener("click", onClick);
+  document.body.removeEventListener("change", onChange);
+  document.body.removeEventListener("input", onInput);
+  window.removeEventListener("resize", onResize);
+}
+
+function onChange(event) {
   const target = event.target;
   if (target.dataset && target.dataset.check) {
     state.checks[target.dataset.check] = target.checked;
@@ -24,22 +49,21 @@ document.body.addEventListener("change", (event) => {
     return;
   }
   onField(event);
-});
-document.body.addEventListener("input", (event) => {
+}
+
+function onInput(event) {
   const target = event.target;
   if (!target.dataset || !target.dataset.bind) return;
   if (target.type === "radio" || target.type === "checkbox") return;
   onField(event);
-});
+}
 
-window.addEventListener("resize", () => {
+function onResize() {
   const currentStep = document.querySelector(".step-link.is-current");
-  if (currentStep && sidebar.scrollWidth > sidebar.clientWidth + 8) {
+  if (currentStep && sidebar && sidebar.scrollWidth > sidebar.clientWidth + 8) {
     currentStep.scrollIntoView({ inline: "center", block: "nearest" });
   }
-});
-
-render({ focusHeading: false });
+}
 
 function onClick(event) {
   const button = event.target.closest("[data-action]");
@@ -59,6 +83,8 @@ function onClick(event) {
   if (action === "reset") reset();
   if (action === "print") window.print();
   if (action === "download") download();
+  if (action === "matter") openMatter();
+  if (action === "documents") openDocuments();
 }
 
 function onField(event) {
@@ -158,9 +184,11 @@ function loadExample(answers) {
 }
 
 function reset() {
-  if (!window.confirm("Erase the answers saved in this browser?")) return;
-  state = freshState();
-  localStorage.removeItem(STORAGE_KEY);
+  if (!window.confirm("Clear the divorce answers in this matter? Office notes on the matter file stay.")) return;
+  const cleared = blankWizard();
+  cleared.answers.acceptedDisclaimer = true;
+  state = { ...cleared, errors: [] };
+  saveState();
   render({ focusHeading: true });
 }
 
@@ -225,15 +253,17 @@ function navRow() {
   const index = steps.indexOf(state.step);
   const back = index > 0 ? `<button class="button secondary" type="button" data-action="back">Back</button>` : `<span></span>`;
   if (state.step === "packet") {
-    return `<div class="nav-row no-print">${back}<button class="button quiet" type="button" data-action="reset">Erase saved answers</button>
+    return `<div class="nav-row no-print">${back}<button class="button quiet" type="button" data-action="reset">Clear answers</button>
       <span>
+        <button class="button secondary" type="button" data-action="matter">Matter file</button>
+        <button class="button secondary" type="button" data-action="documents">Prepare forms</button>
         <button class="button secondary" type="button" data-action="download">Download answers</button>
         <button class="button" type="button" data-action="print">Print packet</button>
       </span>
     </div>`;
   }
   const label = state.step === "welcome" ? "Begin" : "Continue";
-  return `<div class="nav-row"><span>${back}<button class="button quiet" type="button" data-action="reset">Erase saved answers</button></span><button class="button" type="button" data-action="next">${label}</button></div>`;
+  return `<div class="nav-row"><span>${back}<button class="button quiet" type="button" data-action="matter">Matter file</button></span><button class="button" type="button" data-action="next">${label}</button></div>`;
 }
 
 function eyebrow() {
@@ -605,27 +635,6 @@ function selectField(id, label, path, value, options) {
   return `<div class="field"><label for="${esc(id)}">${esc(label)}</label><select id="${esc(id)}" data-bind="${esc(path)}">${options.map(([option, text]) => `<option value="${esc(option)}" ${option === value ? "selected" : ""}>${esc(text)}</option>`).join("")}</select></div>`;
 }
 
-function freshState() {
-  return { step: "welcome", answers: blankAnswers(), checks: {}, visited: { welcome: true }, errors: [], example: false };
-}
-
-function loadState() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    if (!saved || !saved.answers) return freshState();
-    return {
-      step: saved.step || "welcome",
-      answers: mergeAnswers(blankAnswers(), saved.answers),
-      checks: saved.checks || {},
-      visited: saved.visited || { welcome: true },
-      errors: [],
-      example: Boolean(saved.example),
-    };
-  } catch {
-    return freshState();
-  }
-}
-
 function mergeAnswers(base, saved) {
   if (Array.isArray(base)) return Array.isArray(saved) ? saved : base;
   if (!saved || typeof saved !== "object" || typeof base !== "object") return saved ?? base;
@@ -637,13 +646,13 @@ function mergeAnswers(base, saved) {
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+  persist({
     step: state.step,
     answers: state.answers,
     checks: state.checks,
     visited: state.visited,
     example: state.example,
-  }));
+  });
 }
 
 function setPath(root, path, value) {
