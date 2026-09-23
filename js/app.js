@@ -1,6 +1,6 @@
 import { mountWizard, unmountWizard } from "./wizard.js";
 import { planDocuments } from "./populate.js";
-import { buildPdf, downloadPdf } from "./documents.js";
+import { buildPdf } from "./documents.js";
 import {
   createMatter,
   loadMatterFile,
@@ -10,6 +10,7 @@ import {
   upsertMatter,
 } from "./matters.js";
 import { visibleSteps } from "./engine.js";
+import { openDesktopStore } from "./desktop-store.js";
 
 const toolbox = document.querySelector("#toolbox");
 const wizardLayout = document.querySelector("#wizard-layout");
@@ -18,11 +19,37 @@ const brandNote = document.querySelector("#brand-note");
 const headerMatter = document.querySelector("#header-matter");
 
 let activeMatterId = "";
+let store = null;
 
-window.addEventListener("hashchange", renderRoute);
-toolbox.addEventListener("click", onToolboxClick);
-toolbox.addEventListener("input", onToolboxInput);
-renderRoute();
+openDesktopStore().then((opened) => {
+  if (!opened) {
+    renderDesktopRequired();
+    return;
+  }
+  store = opened;
+  window.addEventListener("hashchange", renderRoute);
+  toolbox.addEventListener("click", onToolboxClick);
+  toolbox.addEventListener("input", onToolboxInput);
+  renderRoute();
+}).catch((error) => {
+  toolbox.hidden = false;
+  wizardLayout.hidden = true;
+  toolbox.innerHTML = `<section class="panel"><h1>The matter folder could not be opened</h1><p>${esc(error.message || "Kern LDA could not read the files on this computer.")}</p></section>`;
+});
+
+function renderDesktopRequired() {
+  wizardLayout.hidden = true;
+  toolbox.hidden = false;
+  headerMatter.hidden = true;
+  brandTitle.textContent = "LDA toolbox";
+  brandNote.textContent = "On this computer";
+  toolbox.innerHTML = `<section class="panel">
+    <p class="eyebrow">Kern LDA</p>
+    <h1>This toolbox runs on your computer</h1>
+    <p class="lede">Start the Kern LDA app from the project folder. It does not run as a website, and it does not keep matters in a browser.</p>
+    <div class="callout"><p>Run <code>npm install</code> once, then <code>npm start</code>. Each matter and its filled forms are written to the Kern-LDA folder in your documents.</p></div>
+  </section>`;
+}
 
 function renderRoute() {
   const route = parseRoute(location.hash);
@@ -33,12 +60,12 @@ function renderRoute() {
   if (route.name === "home") {
     activeMatterId = "";
     brandTitle.textContent = "LDA toolbox";
-    brandNote.textContent = "Kern County matters, intake, and prepared forms";
+    brandNote.textContent = "On this computer · matters and prepared forms";
     headerMatter.removeAttribute("href");
     renderHome();
     return;
   }
-  const matter = loadMatterFile(localStorage).find((item) => item.id === route.id);
+  const matter = loadMatterFile(store).find((item) => item.id === route.id);
   if (!matter) {
     location.hash = "#/";
     return;
@@ -55,6 +82,7 @@ function renderRoute() {
       save: (wizard) => saveWizard(matter.id, wizard),
       onMatter: () => { location.hash = `#/matter/${matter.id}`; },
       onDocuments: () => { location.hash = `#/matter/${matter.id}/documents`; },
+      onExport: (payload) => store.saveFile(matter.fileNumber || matter.id, "worksheet.json", new TextEncoder().encode(JSON.stringify(payload, null, 2))),
     });
     return;
   }
@@ -70,13 +98,14 @@ function renderRoute() {
 }
 
 function renderHome() {
-  const matters = loadMatterFile(localStorage);
+  const matters = loadMatterFile(store);
   toolbox.innerHTML = `<section class="panel">
     <p class="eyebrow">Kern LDA</p>
     <h1>Matters</h1>
     <p class="lede">Open a divorce file, take the intake in the wizard, then prepare the starting Judicial Council forms from those answers.</p>
     <p><button class="button" type="button" data-action="new-matter">New divorce matter</button></p>
-    ${matters.length ? `<div class="matter-list">${matters.map(matterCard).join("")}</div>` : `<div class="callout"><p>No matters yet. A new file keeps the client’s answers on this computer and uses them to fill FL-100, FL-110, and FL-105.</p></div>`}
+    ${matters.length ? `<div class="matter-list">${matters.map(matterCard).join("")}</div>` : `<div class="callout"><p>No matters yet. A new file keeps the client’s answers in the Kern-LDA folder on this computer and uses them to fill FL-100, FL-110, and FL-105.</p></div>`}
+    <p class="help">Saved on this computer in ${esc(store.dataDir)}.</p>
     <p class="help">This toolbox prepares documents from what the client tells you. It is not a law practice and it does not give legal advice. Review every form before the client signs it.</p>
   </section>`;
 }
@@ -116,15 +145,16 @@ function renderDocuments(matter) {
       <h3>${esc(form.id)} · ${esc(form.title)}</h3>
       <p>${esc(form.filename)}</p>
       ${form.notes.length ? `<ul class="reasons">${form.notes.map((note) => `<li>${esc(note)}</li>`).join("")}</ul>` : "<p class=\"help\">No extra blanks were flagged.</p>"}
-      <p><button class="button" type="button" data-action="download-form" data-form="${esc(form.id)}">Download filled ${esc(form.id)}</button></p>
+      <p><button class="button" type="button" data-action="download-form" data-form="${esc(form.id)}">Save filled ${esc(form.id)} on this computer</button></p>
     </article>`).join("");
   toolbox.innerHTML = `<section class="panel">
     <p class="eyebrow">${esc(matter.fileNumber)}</p>
     <h1>Forms from this intake</h1>
-    <p class="lede">The answers in the wizard are written into the official fillable forms. Signature dates and the case number are left blank. Read the PDF before the client signs it.</p>
+    <p class="lede">The answers in the wizard are written into the official fillable forms stored with this app. Signature dates and the case number are left blank. Read the PDF before the client signs it.</p>
+    <p class="help">Filled forms are saved under ${esc(store.dataDir)}.</p>
     ${plan.unavailable ? `<div class="warning caution"><p>${esc(plan.unavailable)}</p></div>` : ""}
     <div class="phases">${forms}</div>
-    ${plan.forms.length ? `<p class="help">Kern e-filing wants each form uploaded as its own document. Download them one at a time.</p>` : `<p><a class="button" href="#/matter/${esc(matter.id)}/wizard">Finish the intake</a></p>`}
+    ${plan.forms.length ? `<p class="help">Each form is saved as its own PDF in this matter’s folder.</p><p id="save-status" class="callout" role="status" hidden></p>` : `<p><a class="button" href="#/matter/${esc(matter.id)}/wizard">Finish the intake</a></p>`}
     <div class="nav-row"><a class="button secondary" href="#/matter/${esc(matter.id)}">Back to the matter file</a></div>
   </section>`;
 }
@@ -145,14 +175,14 @@ function onToolboxClick(event) {
   const button = event.target.closest("[data-action]");
   if (!button) return;
   if (button.dataset.action === "new-matter") {
-    const matters = loadMatterFile(localStorage);
+    const matters = loadMatterFile(store);
     const matter = createMatter({ fileNumber: nextFileNumber(matters) });
-    upsertMatter(localStorage, matter);
+    upsertMatter(store, matter);
     location.hash = `#/matter/${matter.id}/wizard`;
   }
   if (button.dataset.action === "delete-matter") {
-    if (!window.confirm("Delete this matter and its intake from this browser?")) return;
-    removeMatter(localStorage, button.dataset.id);
+    if (!window.confirm("Delete this matter from the toolbox on this computer? PDFs already saved in its folder stay where they are.")) return;
+    removeMatter(store, button.dataset.id);
     location.hash = "#/";
   }
   if (button.dataset.action === "download-form") downloadForm(button.dataset.form, button);
@@ -161,15 +191,15 @@ function onToolboxClick(event) {
 function onToolboxInput(event) {
   const field = event.target.closest("[data-office]");
   if (!field || !activeMatterId) return;
-  const matters = loadMatterFile(localStorage);
+  const matters = loadMatterFile(store);
   const matter = matters.find((item) => item.id === activeMatterId);
   if (!matter) return;
   matter[field.dataset.office] = field.value;
-  upsertMatter(localStorage, matter);
+  upsertMatter(store, matter);
 }
 
 async function downloadForm(formId, button) {
-  const matter = loadMatterFile(localStorage).find((item) => item.id === activeMatterId);
+  const matter = loadMatterFile(store).find((item) => item.id === activeMatterId);
   if (!matter) return;
   const plan = planDocuments(matter.wizard.answers).forms.find((form) => form.id === formId);
   if (!plan) return;
@@ -177,8 +207,15 @@ async function downloadForm(formId, button) {
   const original = button.textContent;
   button.textContent = "Preparing…";
   try {
-    const bytes = await buildPdf(plan);
-    downloadPdf(bytes, plan.filename);
+    const template = await store.readTemplate(plan.template);
+    const bytes = await buildPdf(plan, template);
+    const savedPath = await store.saveFile(matter.fileNumber || matter.id, plan.filename, bytes);
+    const status = document.querySelector("#save-status");
+    if (status) {
+      status.hidden = false;
+      status.textContent = `Saved on this computer: ${savedPath}`;
+      status.scrollIntoView({ block: "center" });
+    }
   } catch (error) {
     window.alert(error.message || "The form could not be prepared.");
   } finally {
@@ -188,10 +225,10 @@ async function downloadForm(formId, button) {
 }
 
 function saveWizard(id, wizard) {
-  const matter = loadMatterFile(localStorage).find((item) => item.id === id);
+  const matter = loadMatterFile(store).find((item) => item.id === id);
   if (!matter) return;
   matter.wizard = wizard;
-  upsertMatter(localStorage, matter);
+  upsertMatter(store, matter);
 }
 
 function parseRoute(hash) {

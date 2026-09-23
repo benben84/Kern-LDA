@@ -2,7 +2,12 @@
   "name": "kern-lda",
   "private": true,
   "type": "module",
+  "main": "desktop/main.js",
   "scripts": {
+    "start": "electron .",
     "test": "node --test"
+  },
+  "devDependencies": {
+    "electron": "^35.7.5"
   }
 }

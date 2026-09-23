@@ -16,13 +16,15 @@ let state = blankWizard();
 let persist = () => {};
 let openMatter = () => {};
 let openDocuments = () => {};
+let exportAnswers = async () => "";
 
-export function mountWizard({ load, save, onMatter, onDocuments }) {
+export function mountWizard({ load, save, onMatter, onDocuments, onExport }) {
   sidebar = document.querySelector("#sidebar");
   main = document.querySelector("#main");
   persist = save;
   openMatter = onMatter;
   openDocuments = onDocuments;
+  exportAnswers = onExport || (async () => "");
   const loaded = load() || blankWizard();
   loaded.answers = mergeAnswers(blankAnswers(), loaded.answers || blankAnswers());
   state = loaded;
@@ -192,20 +194,19 @@ function reset() {
   render({ focusHeading: true });
 }
 
-function download() {
+async function download() {
   const payload = {
     note: "Personal divorce worksheet. This is not a court form.",
     exportedAt: new Date().toISOString(),
     answers: state.answers,
     checks: state.checks,
   };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "kern-divorce-worksheet.json";
-  link.click();
-  URL.revokeObjectURL(url);
+  try {
+    const savedPath = await exportAnswers(payload);
+    window.alert(savedPath ? `Saved on this computer:\n${savedPath}` : "Saved on this computer.");
+  } catch (error) {
+    window.alert(error.message || "The answers could not be saved.");
+  }
 }
 
 function render({ focusHeading = false, restoreFocusId = "" } = {}) {
@@ -257,7 +258,7 @@ function navRow() {
       <span>
         <button class="button secondary" type="button" data-action="matter">Matter file</button>
         <button class="button secondary" type="button" data-action="documents">Prepare forms</button>
-        <button class="button secondary" type="button" data-action="download">Download answers</button>
+        <button class="button secondary" type="button" data-action="download">Save answers on this computer</button>
         <button class="button" type="button" data-action="print">Print packet</button>
       </span>
     </div>`;
@@ -280,8 +281,8 @@ function renderWelcome() {
       <p>It is not a lawyer, not a Legal Document Assistant, and not the court. It does not give legal advice, calculate support, or create a form the clerk will accept. File the official PDFs from the California Courts website.</p>
     </div>
     <ul>
-      <li>Your answers stay in this browser. Nothing is uploaded.</li>
-      <li>Do not use a shared or public computer. Download a copy only if you can keep that file private.</li>
+      <li>Your answers stay in the Kern-LDA folder on this computer. Nothing is uploaded.</li>
+      <li>Keep that folder private. This toolbox does not run as a website.</li>
       <li>Many official forms are also published in Spanish. Use the language links on each form page.</li>
     </ul>
     <label class="checkline">
@@ -587,7 +588,7 @@ function renderPacket() {
     ${result.phases.length ? `<h2>Checklist</h2><div class="phases">${result.phases.map((phase) => `<section class="phase"><h3>${esc(phase.title)}</h3>${phase.items.map((item) => `<label><input id="check-${esc(item.id)}" type="checkbox" data-check="${esc(item.id)}" ${state.checks[item.id] ? "checked" : ""}><span>${esc(item.label)}</span></label>`).join("")}</section>`).join("")}</div>` : ""}
     ${result.worksheet.length ? `<h2>Worksheet</h2><div class="worksheet">${result.worksheet.map((section) => `<section><h3>${esc(section.heading)}</h3><dl>${section.rows.map((row) => `<dt>${esc(row.label)}</dt><dd>${esc(row.value)}</dd>`).join("")}</dl></section>`).join("")}</div>` : ""}
     ${result.links.length ? `<h2>Where to confirm this</h2><ul class="link-list">${result.links.map((link) => `<li><a href="${esc(link.href)}">${esc(link.label)}</a></li>`).join("")}</ul>` : ""}
-    <p class="help">Prepared ${esc(generated)} from answers stored in this browser. Dollar caps and fees change. Read the current form and the Kern fee schedule before you sign.</p>`;
+    <p class="help">Prepared ${esc(generated)} from answers stored on this computer. Dollar caps and fees change. Read the current form and the Kern fee schedule before you sign.</p>`;
 }
 
 function venueBlock(venue) {
