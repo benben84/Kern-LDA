@@ -661,7 +661,7 @@ export function recommend(answers) {
       id: "incomplete",
       title: "Answer a few questions first",
       lede: "The packet is built from your answers. Nothing has been decided yet.",
-      reasons: ["Go through each step. You can leave and come back in this browser."],
+      reasons: ["Go through each step. You can leave and come back; the answers stay on this computer."],
     });
   }
 
